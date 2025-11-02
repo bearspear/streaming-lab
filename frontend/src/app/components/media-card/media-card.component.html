@@ -1,0 +1,33 @@
+<div class="media-card">
+  <div class="media-card-poster" [routerLink]="['/media', media.id]">
+    <img
+      [src]="getPosterUrl()"
+      [alt]="media.title"
+      (error)="$any($event.target).src='assets/images/placeholder.svg'"
+    />
+    <div class="media-card-overlay">
+      <div class="play-button" [routerLink]="['/watch', media.id]" (click)="$event.stopPropagation()">
+        <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+      </div>
+    </div>
+    <div class="progress-bar" *ngIf="progress">
+      <div class="progress-fill" [style.width.%]="progress"></div>
+    </div>
+  </div>
+
+  <div class="media-card-info">
+    <h3 class="media-title">{{ media.title }}</h3>
+    <div class="media-meta">
+      <span *ngIf="getYear()" class="year">{{ getYear() }}</span>
+      <span *ngIf="formatDuration()" class="duration">{{ formatDuration() }}</span>
+      <span class="rating" *ngIf="getRating() !== 'N/A'">
+        ★ {{ getRating() }}
+      </span>
+    </div>
+    <p class="media-overview" *ngIf="media.overview">
+      {{ media.overview }}
+    </p>
+  </div>
+</div>

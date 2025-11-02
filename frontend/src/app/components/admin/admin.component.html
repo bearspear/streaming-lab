@@ -1,0 +1,503 @@
+<div class="admin-container">
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="header-content">
+      <h1>Admin Panel</h1>
+      <div class="header-actions">
+        <button class="btn btn-secondary" (click)="navigateToLibrary()">Back to Library</button>
+        <button class="btn btn-logout" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="admin-tabs">
+    <button
+      class="tab"
+      [class.active]="activeTab === 'dashboard'"
+      (click)="switchTab('dashboard')">
+      Dashboard
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'users'"
+      (click)="switchTab('users')">
+      Users
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'library'"
+      (click)="switchTab('library')">
+      Library
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'media'"
+      (click)="switchTab('media')">
+      Media Management
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'network'"
+      (click)="switchTab('network')">
+      Network Sources
+    </button>
+  </nav>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="admin-content">
+    <!-- Dashboard Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'dashboard' && dashboardStats">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Users</h3>
+          <p class="stat-number">{{ dashboardStats.stats.totalUsers }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Movies</h3>
+          <p class="stat-number">{{ dashboardStats.stats.totalMovies }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>TV Shows</h3>
+          <p class="stat-number">{{ dashboardStats.stats.totalTVShows }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Episodes</h3>
+          <p class="stat-number">{{ dashboardStats.stats.totalEpisodes }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Total Storage</h3>
+          <p class="stat-number">{{ formatBytes(dashboardStats.stats.totalStorage) }}</p>
+        </div>
+      </div>
+
+      <div class="dashboard-sections">
+        <!-- Recently Added -->
+        <section class="dashboard-section">
+          <h2>Recently Added</h2>
+          <div class="media-list">
+            <div class="media-item" *ngFor="let item of dashboardStats.recentlyAdded">
+              <div class="media-info">
+                <strong>{{ item.title }}</strong>
+                <span class="media-type">{{ item.type }}</span>
+              </div>
+              <span class="media-date">{{ formatDate(item.added_at) }}</span>
+            </div>
+            <p *ngIf="dashboardStats.recentlyAdded.length === 0" class="no-data">
+              No recently added items
+            </p>
+          </div>
+        </section>
+
+        <!-- Most Watched -->
+        <section class="dashboard-section">
+          <h2>Most Watched</h2>
+          <div class="media-list">
+            <div class="media-item" *ngFor="let item of dashboardStats.mostWatched">
+              <div class="media-info">
+                <strong>{{ item.title }}</strong>
+                <span class="media-type">{{ item.type }}</span>
+              </div>
+              <span class="watch-count">{{ item.watch_count }} views</span>
+            </div>
+            <p *ngIf="dashboardStats.mostWatched.length === 0" class="no-data">
+              No watch history yet
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'users'">
+      <div class="section-header">
+        <h2>User Management</h2>
+        <p class="section-subtitle">Total Users: {{ users.length }}</p>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Watch Count</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>{{ user.id }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                <span class="badge" [class.badge-admin]="user.is_admin">
+                  {{ user.is_admin ? 'Admin' : 'User' }}
+                </span>
+              </td>
+              <td>{{ user.watchCount }}</td>
+              <td>{{ formatDate(user.created_at) }}</td>
+              <td class="actions">
+                <button
+                  class="btn btn-small btn-warning"
+                  (click)="toggleAdminStatus(user.id, user.username, user.is_admin)">
+                  {{ user.is_admin ? 'Demote' : 'Promote' }}
+                </button>
+                <button
+                  class="btn btn-small btn-danger"
+                  (click)="deleteUser(user.id, user.username)">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="users.length === 0 && !loading" class="no-data">
+          No users found
+        </p>
+      </div>
+    </div>
+
+    <!-- Library Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'library' && libraryStats">
+      <div class="section-header">
+        <h2>Library Statistics</h2>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Movies</h3>
+          <p class="stat-number">{{ libraryStats.mediaByType.movies }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>TV Shows</h3>
+          <p class="stat-number">{{ libraryStats.mediaByType.tvShows }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Episodes</h3>
+          <p class="stat-number">{{ libraryStats.mediaByType.episodes }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>With Metadata</h3>
+          <p class="stat-number">{{ libraryStats.metadata.withMetadata }}</p>
+        </div>
+        <div class="stat-card">
+          <h3>Without Metadata</h3>
+          <p class="stat-number">{{ libraryStats.metadata.withoutMetadata }}</p>
+        </div>
+      </div>
+
+      <section class="dashboard-section" *ngIf="libraryStats.missingFiles.length > 0">
+        <h2>Missing Files (First 10)</h2>
+        <div class="media-list">
+          <div class="media-item warning" *ngFor="let file of libraryStats.missingFiles">
+            <div class="media-info">
+              <strong>{{ file.title }}</strong>
+              <span class="file-path">{{ file.file_path }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Media Management Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'media'">
+      <div class="section-header">
+        <h2>Media Management</h2>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label>Type:</label>
+          <select [(ngModel)]="mediaType" (change)="onMediaFilterChange()">
+            <option value="all">All</option>
+            <option value="movie">Movies</option>
+            <option value="tv_show">TV Shows</option>
+            <option value="episode">Episodes</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Search:</label>
+          <input
+            type="text"
+            [(ngModel)]="mediaSearch"
+            (keyup.enter)="onMediaFilterChange()"
+            placeholder="Search by title...">
+          <button class="btn btn-small btn-primary" (click)="onMediaFilterChange()">Search</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Year</th>
+              <th>Size</th>
+              <th>Added</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let media of mediaList">
+              <td>{{ media.id }}</td>
+              <td>{{ media.title }}</td>
+              <td>
+                <span class="badge">{{ media.type }}</span>
+              </td>
+              <td>{{ media.year || 'N/A' }}</td>
+              <td>{{ media.file_size ? formatBytes(media.file_size) : 'N/A' }}</td>
+              <td>{{ formatDate(media.added_at) }}</td>
+              <td class="actions">
+                <button
+                  class="btn btn-small btn-danger"
+                  (click)="deleteMedia(media.id, media.title)">
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="mediaList.length === 0 && !loading" class="no-data">
+          No media items found
+        </p>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="mediaPagination && mediaPagination.totalPages > 1">
+        <button
+          class="btn btn-small"
+          [disabled]="mediaPagination.page === 1"
+          (click)="loadMedia(1)">
+          First
+        </button>
+        <button
+          class="btn btn-small"
+          [disabled]="mediaPagination.page === 1"
+          (click)="loadMedia(mediaPagination.page - 1)">
+          Previous
+        </button>
+        <button
+          *ngFor="let page of getPageNumbers()"
+          class="btn btn-small"
+          [class.active]="page === mediaPagination.page"
+          (click)="loadMedia(page)">
+          {{ page }}
+        </button>
+        <button
+          class="btn btn-small"
+          [disabled]="mediaPagination.page === mediaPagination.totalPages"
+          (click)="loadMedia(mediaPagination.page + 1)">
+          Next
+        </button>
+        <button
+          class="btn btn-small"
+          [disabled]="mediaPagination.page === mediaPagination.totalPages"
+          (click)="loadMedia(mediaPagination.totalPages)">
+          Last
+        </button>
+      </div>
+    </div>
+
+    <!-- Network Sources Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'network'">
+      <div class="section-header">
+        <h2>Network Sources</h2>
+        <p class="section-subtitle">Manage FTP, SMB, and UPnP/DLNA network sources for your media library</p>
+      </div>
+
+      <!-- Actions -->
+      <div style="margin-bottom: 30px; display: flex; gap: 15px;">
+        <button class="btn btn-primary" (click)="toggleAddSourceForm()">
+          {{ showAddSourceForm ? 'Cancel' : 'Add Network Source' }}
+        </button>
+        <button class="btn btn-secondary" (click)="discoverUPnPDevices()">
+          Discover UPnP Devices
+        </button>
+      </div>
+
+      <!-- Add Source Form -->
+      <div class="table-container" *ngIf="showAddSourceForm" style="margin-bottom: 30px; padding: 25px;">
+        <h3 style="margin-top: 0; margin-bottom: 20px; color: #fff;">Add New Network Source</h3>
+        <form (ngSubmit)="addNetworkSource()" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Source Name *</label>
+            <input type="text" [(ngModel)]="newSource.name" name="name" required style="width: 100%;">
+          </div>
+
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Protocol *</label>
+            <select [(ngModel)]="newSource.protocol" name="protocol" required style="width: 100%;">
+              <option value="ftp">FTP</option>
+              <option value="smb">SMB/CIFS</option>
+              <option value="local">Local</option>
+            </select>
+          </div>
+
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Host/IP Address *</label>
+            <input type="text" [(ngModel)]="newSource.host" name="host" required style="width: 100%;" placeholder="192.168.1.100">
+          </div>
+
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Port</label>
+            <input type="number" [(ngModel)]="newSource.port" name="port" style="width: 100%;" [placeholder]="'Default: ' + (getDefaultPort(newSource.protocol || 'ftp') || 'N/A')">
+          </div>
+
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Username</label>
+            <input type="text" [(ngModel)]="newSource.username" name="username" style="width: 100%;">
+          </div>
+
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Password</label>
+            <input type="password" [(ngModel)]="newSource.password" name="password" style="width: 100%;">
+          </div>
+
+          <div class="filter-group" style="flex-direction: column; align-items: flex-start;">
+            <label>Base Path</label>
+            <input type="text" [(ngModel)]="newSource.base_path" name="base_path" style="width: 100%;" placeholder="/">
+          </div>
+
+          <div class="filter-group" style="align-items: center; padding-top: 24px;">
+            <input type="checkbox" [(ngModel)]="newSource.enabled" name="enabled" id="enabled" style="width: auto; margin-right: 10px;">
+            <label for="enabled" style="margin: 0;">Enabled</label>
+          </div>
+
+          <div style="grid-column: 1 / -1; display: flex; gap: 15px; justify-content: flex-end; margin-top: 10px;">
+            <button type="button" class="btn btn-secondary" (click)="toggleAddSourceForm()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!newSource.name || !newSource.host">Add Source</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Network Sources List -->
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Protocol</th>
+              <th>Host</th>
+              <th>Port</th>
+              <th>Base Path</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let source of networkSources">
+              <td>
+                <strong>{{ source.name }}</strong>
+              </td>
+              <td>{{ getProtocolName(source.protocol) }}</td>
+              <td>{{ source.host }}</td>
+              <td>{{ source.port || 'Default' }}</td>
+              <td>{{ source.base_path || '/' }}</td>
+              <td>
+                <span [class]="source.enabled ? 'badge badge-admin' : 'badge'">
+                  {{ source.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn btn-small btn-secondary" (click)="testSourceConnection(source)">Test</button>
+                <button class="btn btn-small btn-secondary" (click)="browseSource(source)">Browse</button>
+                <button class="btn btn-small btn-warning" (click)="toggleSourceEnabled(source)">
+                  {{ source.enabled ? 'Disable' : 'Enable' }}
+                </button>
+                <button class="btn btn-small btn-danger" (click)="deleteNetworkSource(source)">Delete</button>
+              </td>
+            </tr>
+            <tr *ngIf="networkSources.length === 0">
+              <td colspan="7" class="no-data">
+                No network sources configured. Click "Add Network Source" to get started.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- UPnP Devices -->
+      <div *ngIf="upnpDevices.length > 0" style="margin-top: 40px;">
+        <h3 style="color: #fff; margin-bottom: 20px;">Discovered UPnP/DLNA Devices</h3>
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Device Name</th>
+                <th>Manufacturer</th>
+                <th>Model</th>
+                <th>Type</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let device of upnpDevices">
+                <td><strong>{{ device.name }}</strong></td>
+                <td>{{ device.manufacturer || 'Unknown' }}</td>
+                <td>{{ device.modelName || 'Unknown' }}</td>
+                <td>{{ device.type }}</td>
+                <td style="font-family: monospace; font-size: 0.85rem;">{{ device.location }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Directory Browser Modal -->
+      <div *ngIf="showBrowser" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #1a1a1a; border-radius: 8px; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; border: 1px solid #333;">
+          <!-- Browser Header -->
+          <div style="padding: 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0 0 10px 0; color: #fff;">Browse: {{ selectedSource?.name }}</h3>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-small btn-secondary" (click)="navigateToParentDirectory()" [disabled]="browserPath === '/'">
+                  ← Back
+                </button>
+                <span style="color: #b3b3b3; font-family: monospace;">{{ browserPath }}</span>
+              </div>
+            </div>
+            <button class="btn btn-secondary" (click)="closeBrowser()">Close</button>
+          </div>
+
+          <!-- Browser Content -->
+          <div style="flex: 1; overflow-y: auto; padding: 20px;">
+            <div class="media-list">
+              <div class="media-item" *ngFor="let file of browserFiles" (click)="navigateToDirectory(file)" [style.cursor]="file.isDirectory ? 'pointer' : 'default'">
+                <div class="media-info">
+                  <strong>
+                    <span *ngIf="file.isDirectory">📁</span>
+                    <span *ngIf="!file.isDirectory">📄</span>
+                    {{ file.name }}
+                  </strong>
+                  <span class="file-path" style="font-size: 0.8rem; color: #999;">
+                    {{ file.isDirectory ? 'Directory' : 'File' }}
+                    <span *ngIf="file.size"> • {{ formatBytes(file.size) }}</span>
+                  </span>
+                </div>
+              </div>
+              <p *ngIf="browserFiles.length === 0" class="no-data">
+                No files or directories found
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

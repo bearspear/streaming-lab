@@ -1,0 +1,81 @@
+<div class="video-player-container">
+  <!-- Back Button -->
+  <button class="btn-back" (click)="goBack()" *ngIf="!isLoading">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+    </svg>
+    Back to Library
+  </button>
+
+  <!-- Media Title -->
+  <div class="video-header" *ngIf="mediaItem && !isLoading">
+    <h1>{{ mediaItem.title }}</h1>
+    <p *ngIf="mediaItem.year">{{ mediaItem.year }}</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading video... [v2.0]</p>
+  </div>
+  <!-- Error State -->
+  <div class="error-overlay" *ngIf="errorMessage && !isLoading">
+    <h2>{{ errorMessage }}</h2>
+    <button class="btn-retry" (click)="loadMediaInfo()">Retry</button>
+    <button class="btn-back-error" (click)="goBack()">Go Back</button>
+  </div>
+
+  <!-- Video Player -->
+  <div class="video-wrapper" *ngIf="!errorMessage">
+    <video
+      #videoPlayer
+      class="video-js vjs-default-skin vjs-big-play-centered"
+      playsinline
+    ></video>
+  </div>
+
+  <!-- Quality Selector -->
+  <div class="quality-selector" *ngIf="availableQualities.length > 0 && !isLoading">
+    <label>Quality:</label>
+    <select [(ngModel)]="currentQuality" (change)="changeQuality(currentQuality)">
+      <option value="auto">Auto (HLS)</option>
+      <option *ngFor="let quality of availableQualities" [value]="quality.name">
+        {{ quality.name }} ({{ quality.width }}x{{ quality.height }})
+      </option>
+    </select>
+  </div>
+
+  <!-- Episode Navigation -->
+  <div class="episode-navigation" *ngIf="isEpisode && !isLoading && !errorMessage">
+    <button class="btn-episode btn-previous" *ngIf="previousEpisode" (click)="playPreviousEpisode()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+      </svg>
+      <div class="episode-info">
+        <span class="episode-label">Previous Episode</span>
+        <span class="episode-title">{{ previousEpisode.title }}</span>
+      </div>
+    </button>
+
+    <button class="btn-episode btn-next" *ngIf="nextEpisode" (click)="playNextEpisode()">
+      <div class="episode-info">
+        <span class="episode-label">Next Episode</span>
+        <span class="episode-title">{{ nextEpisode.title }}</span>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Keyboard Shortcuts Help -->
+  <div class="shortcuts-help" *ngIf="!isLoading">
+    <div class="shortcuts-title">Keyboard Shortcuts:</div>
+    <div class="shortcuts-list">
+      <span><strong>Space</strong>: Play/Pause</span>
+      <span><strong>←/→</strong>: Seek ±10s</span>
+      <span><strong>F</strong>: Fullscreen</span>
+      <span><strong>Esc</strong>: Exit/Back</span>
+    </div>
+  </div>
+</div>

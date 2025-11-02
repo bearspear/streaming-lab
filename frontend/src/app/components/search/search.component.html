@@ -1,0 +1,83 @@
+<div class="search-container">
+  <div class="search-header">
+    <button class="back-button" (click)="goBack()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to Library
+    </button>
+
+    <div class="search-input-wrapper">
+      <svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search movies and TV shows..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearchInput(searchQuery)"
+        autofocus
+      />
+
+      <button
+        *ngIf="searchQuery"
+        class="clear-button"
+        (click)="clearSearch()"
+        aria-label="Clear search"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isSearching" class="loading-container">
+    <div class="spinner"></div>
+    <p>Searching...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <!-- No Results State -->
+  <div *ngIf="hasSearched && !isSearching && searchResults.length === 0 && !errorMessage" class="no-results">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+    </svg>
+    <h2>No results found</h2>
+    <p>Try searching with different keywords</p>
+  </div>
+
+  <!-- Search Results -->
+  <div *ngIf="hasSearched && searchResults.length > 0 && !isSearching" class="results-section">
+    <h2 class="results-title">
+      Found {{ searchResults.length }} result{{ searchResults.length === 1 ? '' : 's' }}
+    </h2>
+
+    <div class="media-grid">
+      <app-media-card
+        *ngFor="let item of searchResults"
+        [media]="item"
+      ></app-media-card>
+    </div>
+  </div>
+
+  <!-- Initial State (No Search Yet) -->
+  <div *ngIf="!hasSearched && !isSearching" class="initial-state">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="m21 21-4.35-4.35"></path>
+    </svg>
+    <h2>Search Your Library</h2>
+    <p>Start typing to search for movies and TV shows</p>
+  </div>
+</div>

@@ -1,0 +1,127 @@
+<div class="media-details-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="error-message">
+    <h2>{{ errorMessage }}</h2>
+    <button class="btn-back" (click)="goBack()">Back to Library</button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="mediaItem && !isLoading" class="media-details-content">
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-backdrop">
+        <img
+          [src]="getBackdropUrl()"
+          [alt]="mediaItem.title"
+          (error)="$any($event.target).src='assets/images/placeholder.svg'"
+        />
+        <div class="hero-gradient"></div>
+      </div>
+
+      <!-- Back Button -->
+      <button class="btn-back-icon" (click)="goBack()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </button>
+
+      <!-- Hero Content -->
+      <div class="hero-content">
+        <div class="hero-info">
+          <!-- Title -->
+          <h1 class="media-title">{{ mediaItem.title }}</h1>
+
+          <!-- Meta Info -->
+          <div class="media-meta">
+            <span class="year" *ngIf="mediaItem.year">{{ mediaItem.year }}</span>
+            <span class="rating" *ngIf="getRating() !== 'N/A'">★ {{ getRating() }}</span>
+            <span class="duration" *ngIf="formatDuration()">{{ formatDuration() }}</span>
+            <span class="quality" *ngIf="mediaItem.quality">{{ mediaItem.quality }}</span>
+          </div>
+
+          <!-- Progress Indicator -->
+          <div class="watch-progress" *ngIf="watchProgress > 0">
+            <div class="progress-text">{{ watchProgress }}% watched</div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" [style.width.%]="watchProgress"></div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="btn-play" (click)="playVideo()">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <span *ngIf="watchProgress > 0">Resume</span>
+              <span *ngIf="watchProgress === 0">Play</span>
+            </button>
+          </div>
+
+          <!-- Overview -->
+          <div class="media-overview" *ngIf="mediaItem.overview">
+            <p>{{ mediaItem.overview }}</p>
+          </div>
+        </div>
+
+        <!-- Poster (on larger screens) -->
+        <div class="hero-poster">
+          <img
+            [src]="getPosterUrl()"
+            [alt]="mediaItem.title"
+            (error)="$any($event.target).src='assets/images/placeholder.svg'"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Section -->
+    <div class="details-section">
+      <div class="details-grid">
+        <!-- Genres -->
+        <div class="detail-item" *ngIf="getGenres().length > 0">
+          <h3>Genres</h3>
+          <div class="genre-tags">
+            <span class="tag" *ngFor="let genre of getGenres()">{{ genre }}</span>
+          </div>
+        </div>
+
+        <!-- Cast -->
+        <div class="detail-item" *ngIf="getCast().length > 0">
+          <h3>Cast</h3>
+          <p>{{ getCast().join(', ') }}</p>
+        </div>
+
+        <!-- Director -->
+        <div class="detail-item" *ngIf="mediaItem.director">
+          <h3>Director</h3>
+          <p>{{ mediaItem.director }}</p>
+        </div>
+
+        <!-- Release Date -->
+        <div class="detail-item" *ngIf="mediaItem.release_date">
+          <h3>Release Date</h3>
+          <p>{{ mediaItem.release_date }}</p>
+        </div>
+
+        <!-- Type -->
+        <div class="detail-item">
+          <h3>Type</h3>
+          <p class="type-badge">{{ mediaItem.type }}</p>
+        </div>
+
+        <!-- File Info -->
+        <div class="detail-item" *ngIf="mediaItem.file_size">
+          <h3>File Size</h3>
+          <p>{{ (mediaItem.file_size / 1024 / 1024 / 1024).toFixed(2) }} GB</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
